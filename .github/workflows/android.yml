@@ -33,8 +33,12 @@ jobs:
         target: google_apis         
         arch: x86_64                
         profile: Pixel_6       
-        emulator-options: -no-snapshot-save
-        script: ./gradlew connectedAndroidTest
+        emulator-options: -no-snapshot-save -noaudio -no-boot-anim
+        disable-animations: true
+        enable-hw-keyboard: true
+
+    - name: Wait for Emulator
+      run: adb wait-for-device
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
