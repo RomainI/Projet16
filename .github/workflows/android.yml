@@ -36,6 +36,7 @@ jobs:
         emulator-options: -no-snapshot-save -noaudio -no-boot-anim
         disable-animations: true
         enable-hw-keyboard: true
+	script: ./gradlew connectedAndroidTest
 
     - name: Wait for Emulator
       run: adb wait-for-device
