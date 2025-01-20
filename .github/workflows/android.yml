@@ -40,7 +40,10 @@ jobs:
         arch: x86_64
         profile: Pixel_6
         emulator-options: -no-snapshot-save -noaudio -no-boot-anim
-    
+    disable-animations: true
+    enable-hw-keyboard: true
+script: ./gradlew connectedAndroidTest
+
     - name: List connected devices
       run: adb devices
 
