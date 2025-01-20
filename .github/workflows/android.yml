@@ -1,10 +1,10 @@
-name: Android ci
+name: Android CI
 
 on:
   push:
     branches:
       - main
-      
+
 jobs:
   build-and-test:
     name: Build, Test, and SonarCloud Analysis
@@ -23,20 +23,20 @@ jobs:
     - name: Set up Android SDK
       uses: android-actions/setup-android@v2
       with:
-        api-level: 33               # API Level de l'émulateur
-        build-tools: 33.0.3         # Outils de compilation pour l'API 33
+        api-level: 33               
+        build-tools: 33.0.3         
 
     - name: Start Emulator
       uses: reactivecircus/android-emulator-runner@v2
       with:
-        api-level: 33               
-        target: google_apis         
-        arch: x86_64                
-        profile: Pixel_6       
+        api-level: 33
+        target: google_apis
+        arch: x86_64
+        profile: Pixel_6
         emulator-options: -no-snapshot-save -noaudio -no-boot-anim
         disable-animations: true
         enable-hw-keyboard: true
-	script: ./gradlew connectedAndroidTest
+        script: ./gradlew connectedAndroidTest
 
     - name: Wait for Emulator
       run: adb wait-for-device
