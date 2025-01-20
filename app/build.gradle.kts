@@ -61,7 +61,9 @@ android {
                 "proguard-rules.pro"
             )
         }
+
         debug {
+            signingConfig = null
             enableAndroidTestCoverage = true
             enableUnitTestCoverage = true
         }
