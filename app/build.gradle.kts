@@ -8,6 +8,7 @@ plugins {
     id("com.google.dagger.hilt.android")
     id("com.google.devtools.ksp")
     id("jacoco")
+    id("org.sonarqube")
 
 }
 tasks.withType<Test> {
@@ -109,6 +110,21 @@ val jacocoTestReport by tasks.registering(JacocoReport::class) {
     executionData.setFrom(fileTree(buildDir) {
         include("**/*.exec", "**/*.ec")
     })
+}
+
+sonarqube {
+    properties {
+        property("sonar.projectKey", "RomainI_Projet16")
+        property("sonar.organization", "romaini")
+        property("sonar.host.url", "https://sonarcloud.io")
+        property("sonar.login", project.findProperty("sonar.login") ?: "")
+
+        property("sonar.sources", "src/main/java")
+        property("sonar.tests", "src/test/java")
+        property("sonar.kotlin.detekt.reportPaths", "$buildDir/reports/detekt/detekt-report.xml") // Si vous utilisez Detekt
+        property("sonar.java.coveragePlugin", "jacoco")
+        property("sonar.coverage.jacoco.xmlReportPaths", "$buildDir/reports/jacoco/testDebugUnitTestCoverage/testDebugUnitTestCoverage.xml")
+    }
 }
 
 
