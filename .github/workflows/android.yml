@@ -24,7 +24,13 @@ jobs:
       uses: android-actions/setup-android@v2
       with:
         api-level: 33               
-        build-tools: 33.0.3         
+        build-tools: 33.0.3   
+
+    - name: Enable KVM
+      run: |
+        echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+        sudo udevadm control --reload-rules
+        sudo udevadm trigger --name-match=kvm      
 
     - name: Start Emulator
       uses: reactivecircus/android-emulator-runner@v2
@@ -32,11 +38,11 @@ jobs:
         api-level: 33
         target: google_apis
         arch: x86_64
-        profile: Pixel_6
+        profile: Nexus 6
         emulator-options: -no-snapshot-save -noaudio -no-boot-anim
         disable-animations: true
         enable-hw-keyboard: true
-        script: ./gradlew connectedAndroidTest
+        script: ./gradlew connectedCheck
 
     - name: Wait for Emulator
       run: adb wait-for-device
@@ -54,7 +60,7 @@ jobs:
       run: ./gradlew test
 
     - name: Run Instrumented Tests
-      run: ./gradlew connectedAndroidTest
+      run: ./gradlew connectedCheck
 
     - name: SonarCloud Analysis
       env:
