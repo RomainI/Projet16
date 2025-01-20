@@ -42,7 +42,7 @@ jobs:
         emulator-options: -no-snapshot-save -noaudio -no-boot-anim
     
     - name: List connected devices
-    run: adb devices
+      run: adb devices
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
