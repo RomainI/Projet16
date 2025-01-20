@@ -27,7 +27,7 @@ jobs:
         build-tools: 33.0.3         # Outils de compilation pour l'API 33
 
     - name: Start Emulator
-      uses: reactivecircus/android-emulator-runner@v3
+      uses: reactivecircus/android-emulator-runner@v2
       with:
         api-level: 33               
         target: google_apis         
