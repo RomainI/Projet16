@@ -88,6 +88,20 @@ android {
             languageVersion.set(JavaLanguageVersion.of(17))
         }
     }
+
+
+}
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+var SONAR_API_KEY : String
+if (localPropertiesFile.exists()) {
+    FileInputStream(localPropertiesFile).use { stream ->
+        localProperties.load(stream)
+    }
+    SONAR_API_KEY = localProperties["sonar.login"]?.toString().toString()
+} else {
+    SONAR_API_KEY =""
 }
 
 val androidExtension = extensions.getByType<BaseExtension>()
@@ -117,7 +131,7 @@ sonarqube {
         property("sonar.projectKey", "RomainI_Projet16")
         property("sonar.organization", "romaini")
         property("sonar.host.url", "https://sonarcloud.io")
-        property("sonar.login", project.findProperty("sonar.login") ?: "")
+        property("sonar.login", SONAR_API_KEY)
 
         property("sonar.sources", "src/main/java")
         property("sonar.tests", "src/test/java")
