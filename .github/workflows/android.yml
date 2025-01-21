@@ -35,20 +35,17 @@ jobs:
 
       - name: Prepare Emulator
         run: |
-          sdkmanager --install "platform-tools" "platforms;android-33" "system-images;android-33;google_apis;x86_64" "emulator"
+          sdkmanager --install "platform-tools" "system-images;android-33;google_apis;x86_64" "emulator"
           sdkmanager --licenses
           yes | sdkmanager --update
-
+          
       - name: Start Emulator
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 33
-          target: google_apis
-          arch: x86_64
-          profile: pixel
-          emulator-options: -no-snapshot-save -noaudio -no-boot-anim
-          disable-animations: true
-          enable-hw-keyboard: true
+        run: |
+          echo "no" | avdmanager create avd -n test -k "system-images;android-33;google_apis;x86_64" --force
+          emulator -avd test -no-snapshot-load -noaudio -no-boot-anim -gpu swiftshader_indirect &
+          adb wait-for-device
+          timeout 120 sh -c "until adb shell getprop sys.boot_completed | grep -m 1 '1'; do sleep 1; done"
+          echo "Emulator is ready."
 
 
       - name: Check Emulator Devices
