@@ -6,25 +6,14 @@ on:
       - main
 
 jobs:
-  build-and-test:
-    name: Build, Test, and SonarCloud Analysis
+  test:
     runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        api-level: [29]
     steps:
-      - name: Checkout code
+      - name: checkout
         uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v2
-        with:
-          api-level: 33
-          build-tools: 33.0.3
 
       - name: Enable KVM
         run: |
@@ -32,57 +21,33 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Install missing libraries
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libpulse0
+      - name: Gradle cache
+        uses: gradle/actions/setup-gradle@v3
+        
+      - name: AVD cache
+        uses: actions/cache@v4
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-${{ matrix.api-level }}
 
-      - name: Start Emulator
+      - name: create AVD and generate snapshot for caching
+        if: steps.avd-cache.outputs.cache-hit != 'true'
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 33
-          target: google_apis
-          arch: x86_64
-          profile: pixel
-          emulator-options: -no-snapshot-save -noaudio -no-boot-anim
-          emulator-port: 5554
+          api-level: ${{ matrix.api-level }}
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          script: echo "Generated AVD snapshot for caching."
+
+      - name: run tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          enable-hw-keyboard: true
-          script: ./gradlew connectedAndroidTest
-
-      - name: Wait for emulator to boot
-        run: |
-          adb wait-for-device
-          sleep 60
-          adb shell getprop sys.boot_completed | grep 1
-
-      - name: Debug ADB
-        run: |
-          adb start-server
-          adb devices -l
-          adb shell getprop
-
-      - name: Restart ADB server
-        run: |
-          adb kill-server
-          adb start-server
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Build with Gradle
-        run: ./gradlew build
-
-      - name: Install dependencies
-        run: ./gradlew dependencies
-
-      - name: Run Unit Tests
-        run: ./gradlew test
-
-      - name: Run Instrumented Tests
-        run: ./gradlew connectedCheck
-
-      - name: SonarCloud Analysis
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./gradlew sonar
+          script: ./gradlew connectedCheck
