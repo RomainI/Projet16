@@ -9,6 +9,8 @@ plugins {
     id("com.google.devtools.ksp")
     id("jacoco")
     id("org.sonarqube")
+    id("com.google.gms.google-services")
+    id("com.google.firebase.appdistribution")
 
 }
 tasks.withType<Test> {
@@ -39,6 +41,8 @@ android {
                 keyAlias = keystoreProperties["keyAlias"] as String
                 keyPassword = keystoreProperties["keyPassword"] as String
             }
+
+
         }
     }
 
@@ -60,6 +64,12 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
+            firebaseAppDistribution {
+                serviceCredentialsFile = project.rootProject.file("firebase-service-account.json").toString()
+                releaseNotes = "Release notes for full version"
+                testers = "romain.ilardi@gmail.com"
+            }
         }
 
         debug {
@@ -93,6 +103,7 @@ android {
 
 
 }
+
 
 val localProperties = Properties()
 val localPropertiesFile = rootProject.file("local.properties")

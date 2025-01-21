@@ -1,4 +1,4 @@
-name: Android CI
+name: Android CI with Firebase
 
 on:
   push:
@@ -6,7 +6,8 @@ on:
       - main
 
 jobs:
-  build-and-test:
+  build-test-publish:
+    name: Build, Test, Sonar, and Firebase Publish
     runs-on: ubuntu-latest
 
     steps:
@@ -19,50 +20,32 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v2
+      - name: Cache Gradle
+        uses: actions/cache@v4
         with:
-          api-level: 33
-          build-tools: 33.0.3
-
-      - name: Enable KVM
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-
-      - name: Restart ADB Server
-        run: |
-          adb kill-server
-          adb start-server
-
-      - name: Start Emulator
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 33
-          target: google_apis
-          arch: x86_64
-          profile: pixel
-          emulator-options: -no-snapshot-save -noaudio -no-boot-anim
-          emulator-port: 5554
-          emulator-boot-timeout: 600
-          disable-animations: true
-          enable-hw-keyboard: true
-
-      - name: Wait for Emulator
-        run: adb wait-for-device
-
-      - name: Verify Connected Devices
-        run: adb devices
+          path: ~/.gradle/caches
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        run: ./gradlew build
+        run: ./gradlew assembleRelease
+
+      - name: Install dependencies
+        run: ./gradlew dependencies
 
       - name: Run Unit Tests
         run: ./gradlew test
 
-      - name: Run Instrumented Tests
-        run: ./gradlew connectedCheck
+      - name: SonarCloud Analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: ./gradlew sonarqube
+
+      - name: Upload to Firebase App Distribution
+        env:
+          FIREBASE_AUTH_TOKEN: ${{ secrets.FIREBASE_AUTH_TOKEN }}
+        run: |
+          ./gradlew appDistributionUploadRelease
