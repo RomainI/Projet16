@@ -32,6 +32,11 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      - name: Install missing libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpulse0
+
       - name: Start Emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -40,12 +45,27 @@ jobs:
           arch: x86_64
           profile: pixel
           emulator-options: -no-snapshot-save -noaudio -no-boot-anim
+          emulator-port: 5554
           disable-animations: true
           enable-hw-keyboard: true
           script: ./gradlew connectedAndroidTest
 
-      - name: List connected devices
-        run: adb devices
+      - name: Wait for emulator to boot
+        run: |
+          adb wait-for-device
+          sleep 60
+          adb shell getprop sys.boot_completed | grep 1
+
+      - name: Debug ADB
+        run: |
+          adb start-server
+          adb devices -l
+          adb shell getprop
+
+      - name: Restart ADB server
+        run: |
+          adb kill-server
+          adb start-server
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
