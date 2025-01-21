@@ -40,11 +40,16 @@ jobs:
           yes | sdkmanager --update
 
       - name: Start Emulator
-        run: |
-          echo "no" | avdmanager create avd -n test -k "system-images;android-33;google_apis;x86_64" --force
-          emulator -avd test -no-snapshot -no-audio -no-window -gpu swiftshader_indirect &
-          # adb wait-for-device
-          # sleep 60
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          target: google_apis
+          arch: x86_64
+          profile: pixel
+          emulator-options: -no-snapshot-save -noaudio -no-boot-anim
+          disable-animations: true
+          enable-hw-keyboard: true
+
 
       - name: Check Emulator Devices
         run: adb devices
