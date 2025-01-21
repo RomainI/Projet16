@@ -42,11 +42,13 @@ jobs:
       - name: Start Emulator
         run: |
           echo "no" | avdmanager create avd -n test -k "system-images;android-33;google_apis;x86_64" --force
-          emulator -avd test -no-snapshot -no-audio -no-window &
-
-      - name: Wait for Emulator
-        run: |
+          emulator -avd test -no-snapshot -no-audio -no-window -gpu swiftshader_indirect &
+          adb wait-for-device
           sleep 60
+
+      - name: Check Emulator Devices
+        run: adb devices
+
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -75,3 +77,6 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: ./gradlew sonar
+
+      - name: Stop Emulator
+        run: adb -s emulator-5554 emu kill
