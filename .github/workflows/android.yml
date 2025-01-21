@@ -35,10 +35,13 @@ jobs:
 
       - name: Prepare Emulator
         run: |
-          sdkmanager --install "platform-tools" "system-images;android-33;google_apis;x86_64" "emulator"
-          sdkmanager --licenses
-          yes | sdkmanager --update
-          
+          sdkmanager --install "platform-tools" "emulator" "system-images;android-33;google_apis;x86_64"
+          yes | sdkmanager --licenses
+
+      - name: Set PATH for Android Tools
+        run: |
+          echo "export PATH=$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$PATH" >> $GITHUB_ENV
+
       - name: Start Emulator
         run: |
           echo "no" | avdmanager create avd -n test -k "system-images;android-33;google_apis;x86_64" --force
