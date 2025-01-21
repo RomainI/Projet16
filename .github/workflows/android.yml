@@ -36,6 +36,11 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      - name: Install Dependencies for Emulator
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpulse0 libnss3 libxrandr2 libxcomposite1 libxi6 libxtst6 libxkbcommon-x11-0 libasound2    
+
       # Prépare l'émulateur Android
       - name: Prepare Emulator
         run: |
