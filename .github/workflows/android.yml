@@ -39,7 +39,9 @@ jobs:
       - name: Install Dependencies for Emulator
         run: |
           sudo apt-get update
-          sudo apt-get install -y libpulse0 libnss3 libxrandr2 libxcomposite1 libxi6 libxtst6 libxkbcommon-x11-0 libasound2    
+          sudo apt-get install -y liboss4-salsa-asound2 libnss3 libxrandr2 libxcomposite1 libxi6 libxtst6 libxkbcommon-x11-0 || true
+          wget http://archive.ubuntu.com/ubuntu/pool/main/a/alsa-lib/libasound2_1.2.3.2-1ubuntu1_amd64.deb
+          sudo dpkg -i libasound2_1.2.3.2-1ubuntu1_amd64.deb || sudo apt-get install -f
 
       # Prépare l'émulateur Android
       - name: Prepare Emulator
