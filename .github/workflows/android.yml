@@ -6,8 +6,8 @@ on:
       - main
 
 jobs:
-  unit-test-and-sonar:
-    name: Unit Tests and SonarCloud Analysis
+  build-and-test:
+    name: Build, Test, and SonarCloud Analysis
     runs-on: ubuntu-latest
 
     steps:
@@ -26,63 +26,43 @@ jobs:
           api-level: 33
           build-tools: 33.0.3
 
-      - name: Gradle Cache
-        uses: gradle/actions/setup-gradle@v3
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Run Unit Tests
-        run: ./gradlew test
-
-      - name: SonarCloud Analysis
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./gradlew sonar
-
-  instrumented-tests:
-    name: Instrumented Tests
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        api-level: [ 31 ]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Gradle Cache
-        uses: gradle/actions/setup-gradle@v3
+      - name: Kill and Restart ADB Server
+        run: |
+          adb kill-server
+          adb start-server
 
-      - name: AVD Cache
-        uses: actions/cache@v4
-        id: avd-cache
-        with:
-          path: |
-            ~/.android/avd/*
-            ~/.android/adb*
-          key: avd-${{ matrix.api-level }}
-
-      - name: Create AVD and Generate Snapshot
-        if: steps.avd-cache.outputs.cache-hit != 'true'
+      - name: Start Emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: ${{ matrix.api-level }}
-          force-avd-creation: false
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
-          disable-animations: false
-          script: echo "Generated AVD snapshot for caching."
+          api-level: 33
+          target: google_apis
+          arch: x86_64
+          profile: pixel
+          emulator-options: -no-snapshot-save -noaudio -no-boot-anim
+          emulator-port: 5554
+          disable-animations: true
+          enable-hw-keyboard: true
+          script: ./gradlew connectedAndroidTest
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew build
+
+      - name: Run Unit Tests
+        run: ./gradlew test
 
       - name: Run Instrumented Tests
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: ${{ matrix.api-level }}
-          force-avd-creation: false
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
-          disable-animations: true
-          script: ./gradlew connectedCheck
+        run: ./gradlew connectedCheck
+
+      - name: SonarCloud Analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: ./gradlew sonar
