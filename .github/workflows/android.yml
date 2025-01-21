@@ -45,7 +45,7 @@ jobs:
           arch: x86_64
           profile: pixel
           emulator-options: -no-snapshot-save -noaudio -no-boot-anim
-          emulator-port: 5554
+          emulator-port: 5037
           disable-animations: true
           enable-hw-keyboard: true
           script: ./gradlew connectedAndroidTest
