@@ -32,6 +32,9 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      - name: Install xmllint
+        run: sudo apt-get install -y libxml2-utils
+
       - name: Kill and Restart ADB Server
         run: |
           adb kill-server
@@ -45,7 +48,6 @@ jobs:
           arch: x86_64
           profile: pixel
           emulator-options: -no-snapshot-save -noaudio -no-boot-anim
-          emulator-port: 5554
           disable-animations: true
           enable-hw-keyboard: true
           script: ./gradlew connectedAndroidTest
