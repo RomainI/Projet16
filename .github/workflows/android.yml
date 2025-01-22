@@ -51,6 +51,14 @@ jobs:
         run: |
           export GOOGLE_APPLICATION_CREDENTIALS=app/firebase-adminsdk.json
 
+      - name: Verify Firebase Credentials File
+        run: ls -l app/firebase-adminsdk.json
+
+      - name: Debug GOOGLE_APPLICATION_CREDENTIALS
+        run: echo $GOOGLE_APPLICATION_CREDENTIALS
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: app/firebase-adminsdk.json
+
       # 7. Compile l'application avec Gradle
       - name: Build with Gradle
         run: ./gradlew build
