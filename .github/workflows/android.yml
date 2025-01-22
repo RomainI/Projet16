@@ -2,8 +2,8 @@ name: Android CI
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - 'vf*'
 
 jobs:
   build-and-test:
@@ -11,29 +11,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Vérifie le code source
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Configure JDK 17
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # 3. Configure Android SDK
       - name: Set up Android SDK
         uses: android-actions/setup-android@v2
         with:
           api-level: 33
           build-tools: 33.0.3
 
-      # 4. Accorde les permissions nécessaires à gradlew
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # 5. Décode les fichiers JSON nécessaires
       - name: Decode google-services.json
         run: |
           echo $GOOGLE_SERVICES_JSON | base64 --decode > app/google-services.json
@@ -46,7 +41,6 @@ jobs:
         env:
           FIREBASE_AUTH_TOKEN: ${{ secrets.FIREBASE_AUTH_TOKEN }}
 
-      # 6. Configure Firebase CLI avec le fichier de service
       - name: Set up Firebase CLI
         run: |
           export GOOGLE_APPLICATION_CREDENTIALS=app/firebase-adminsdk.json
@@ -62,15 +56,12 @@ jobs:
       - name: Set File Permissions
         run: chmod 600 app/firebase-adminsdk.json
 
-      # 7. Compile l'application avec Gradle
       - name: Build with Gradle
         run: ./gradlew build
 
-      # 8. Exécute les tests unitaires
       - name: Run Unit Tests
         run: ./gradlew test
 
-      # 9. Analyse SonarCloud
       - name: SonarCloud Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -79,7 +70,6 @@ jobs:
       - name: Display Firebase Admin SDK Content
         run: cat app/firebase-adminsdk.json
 
-      # 10. Upload l'APK vers Firebase App Distribution
       - name: Upload APK to Firebase
         run: ./gradlew appDistributionUploadRelease
         env:
