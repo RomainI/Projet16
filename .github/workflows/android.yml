@@ -59,6 +59,9 @@ jobs:
         env:
           GOOGLE_APPLICATION_CREDENTIALS: app/firebase-adminsdk.json
 
+      - name: Set File Permissions
+        run: chmod 600 app/firebase-adminsdk.json
+
       # 7. Compile l'application avec Gradle
       - name: Build with Gradle
         run: ./gradlew build
