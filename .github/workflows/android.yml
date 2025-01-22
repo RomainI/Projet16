@@ -76,6 +76,9 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: ./gradlew sonar
 
+      - name: Display Firebase Admin SDK Content
+        run: cat app/firebase-adminsdk.json
+        
       # 10. Upload l'APK vers Firebase App Distribution
       - name: Upload APK to Firebase
         run: ./gradlew appDistributionUploadRelease
