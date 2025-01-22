@@ -66,7 +66,8 @@ android {
             )
 
             firebaseAppDistribution {
-                serviceCredentialsFile = project.rootProject.file("firebase-service-account.json").toString()
+                serviceCredentialsFile = project.rootProject.file("app/firebase-adminsdk.json").toString()
+                appId ="1:50188799211:android:0cef7e8ca9fe7b8560c2ae"
                 releaseNotes = "Release notes for full version"
                 testers = "romain.ilardi@gmail.com"
             }
