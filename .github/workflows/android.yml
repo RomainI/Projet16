@@ -38,7 +38,7 @@ jobs:
 
       - name: Authenticate with Google Cloud
         run: |
-          echo '${{ secrets.FIREBASE_AUTH_TOKEN }}' > $HOME/gcloud-service-key.json
+          echo '${{ secrets.FIREBASE_AUTH_TOKEN }}' | base64 --decode > $HOME/gcloud-service-key.json
           gcloud auth activate-service-account --key-file=$HOME/gcloud-service-key.json
           gcloud config set project projet16-7afde
 
