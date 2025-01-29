@@ -48,6 +48,9 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew assembleDebug assembleAndroidTest
 
+      - name: Debug APK Paths
+        run: ls -R app/build/outputs/apk/
+
       - name: Run Unit Tests
         run: ./gradlew test
 
