@@ -59,18 +59,26 @@ jobs:
       - name: Run Unit Tests
         run: ./gradlew test
 
+      - name: Authenticate with Google Cloud
+        run: |
+          echo '${{ secrets.FIREBASE_AUTH_TOKEN }}' > $HOME/gcloud-service-key.json
+          gcloud auth activate-service-account --key-file=$HOME/gcloud-service-key.json
+          gcloud config set project projet16-7afde
+
+      - name: Install gcloud Firebase CLI
+        run: |
+          gcloud components install beta
+
       - name: Run Instrumented Tests on Firebase Test Lab
-        uses: firebase-actions/testing@v0
-        with:
-          projectId: projet16-7afde
-          serviceAccount: ${{ secrets.FIREBASE_AUTH_TOKEN }}
-          android-api-level: 29
-          android-device-model: 'Pixel2'
-          app: app/build/outputs/apk/debug/app-debug.apk
-          test: app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
-          timeout: 5m
-          directories-to-pull: /sdcard/screenshots
-          environment-variables: clearPackageData=true # Optional: Clears app data between test runs
+        run: |
+          gcloud firebase test android run \
+            --type instrumentation \
+            --app app/build/outputs/apk/debug/app-debug.apk \
+            --test app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk \
+            --device model=Pixel2,version=29,locale=en,orientation=portrait \
+            --timeout 5m \
+            --directories-to-pull /sdcard/screenshots \
+            --environment-variables clearPackageData=true
 
       - name: SonarCloud Analysis
         env:
