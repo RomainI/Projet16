@@ -2,12 +2,13 @@ name: Android CI
 
 on:
   push:
-    tags:
-      - 'vf*'
+    branches:
+      - main
+  workflow_dispatch: 
 
 jobs:
-  build-and-test:
-    name: Build, Test, and SonarCloud Analysis
+  build-test-firebase:
+    name: Build, Test on Firebase Test Lab, and SonarCloud Analysis
     runs-on: ubuntu-latest
 
     steps:
@@ -44,6 +45,7 @@ jobs:
       - name: Set up Firebase CLI
         run: |
           export GOOGLE_APPLICATION_CREDENTIALS=app/firebase-adminsdk.json
+          npx firebase setup:web
 
       - name: Verify Firebase Credentials File
         run: ls -l app/firebase-adminsdk.json
@@ -57,20 +59,32 @@ jobs:
         run: chmod 600 app/firebase-adminsdk.json
 
       - name: Build with Gradle
-        run: ./gradlew build
+        run: ./gradlew assembleDebug
 
       - name: Run Unit Tests
         run: ./gradlew test
+
+      - name: Run Instrumented Tests on Firebase Test Lab
+        uses: FirebaseExtended/action-test-lab@v1
+        with:
+          app: app/build/outputs/apk/debug/app-debug.apk
+          test: app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+          devices: |
+            - model: Pixel2
+              version: 29
+            - model: Nexus5
+              version: 27
+          extra-options: >
+            --timeout 6m
+            --num-flaky-test-attempts 2
+          service-account: app/firebase-adminsdk.json
 
       - name: SonarCloud Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: ./gradlew sonar
 
-      - name: Display Firebase Admin SDK Content
-        run: cat app/firebase-adminsdk.json
-
       - name: Upload APK to Firebase
-        run: ./gradlew appDistributionUploadRelease
+        run: ./gradlew appDistributionUploadDebug  # Utilise appDistributionUploadDebug au lieu de appDistributionUploadRelease
         env:
           GOOGLE_APPLICATION_CREDENTIALS: app/firebase-adminsdk.json
