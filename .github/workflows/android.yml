@@ -48,6 +48,9 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew assembleDebug assembleAndroidTest
 
+      - name: Rename APK for Firebase Test Lab
+        run: mv app/build/outputs/apk/debug/app-debug-unsigned.apk app/build/outputs/apk/debug/app-debug.apk
+
       - name: Debug APK Paths
         run: ls -R app/build/outputs/apk/
 
