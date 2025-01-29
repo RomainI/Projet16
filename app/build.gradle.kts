@@ -74,7 +74,6 @@ android {
         }
 
         debug {
-            signingConfig = null
             enableAndroidTestCoverage = true
             enableUnitTestCoverage = true
         }
