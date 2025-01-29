@@ -32,49 +32,37 @@ jobs:
 
       - name: Decode google-services.json
         run: |
-          echo $GOOGLE_SERVICES_JSON | base64 --decode > app/google-services.json
+          echo '${{ secrets.GOOGLE_SERVICES_JSON }}' | base64 --decode > app/google-services.json
         env:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
 
-      - name: Decode Firebase Admin SDK
+      - name: Authenticate with Google Cloud
         run: |
-          echo $FIREBASE_AUTH_TOKEN | base64 --decode > app/firebase-adminsdk.json
-        env:
-          FIREBASE_AUTH_TOKEN: ${{ secrets.FIREBASE_AUTH_TOKEN }}
+          echo '${{ secrets.FIREBASE_AUTH_TOKEN }}' > $HOME/gcloud-service-key.json
+          gcloud auth activate-service-account --key-file=$HOME/gcloud-service-key.json
+          gcloud config set project projet16-7afde
 
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
 
-      - name: Set up Firebase CLI
-        run: |
-          export GOOGLE_APPLICATION_CREDENTIALS=app/firebase-adminsdk.json
-          firebase use projet16-7afde --token ${{ secrets.FIREBASE_AUTH_TOKEN }} # Ajout de l'argument --token
-
-      - name: Verify Firebase Credentials File
-        run: ls -l app/firebase-adminsdk.json
-
-      - name: Set File Permissions for firebase-adminsdk.json
-        run: chmod 600 app/firebase-adminsdk.json
-
       - name: Build with Gradle
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleDebug assembleAndroidTest
 
       - name: Run Unit Tests
         run: ./gradlew test
 
       - name: Run Instrumented Tests on Firebase Test Lab
-        uses: firebase-actions/test-lab@v0
-        with:
-          projectId: projet16-7afde
-          serviceAccount: ${{ secrets.FIREBASE_AUTH_TOKEN }}
-          type: instrumentation
-          android-api-level: 29
-          android-device-model: 'Pixel2'
-          app: app/build/outputs/apk/debug/app-debug.apk
-          test: app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
-          timeout: 5m
-          directories-to-pull: /sdcard/screenshots
-          environment-variables: clearPackageData=true
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: $HOME/gcloud-service-key.json
+        run: |
+          gcloud firebase test android run \
+            --type instrumentation \
+            --app app/build/outputs/apk/debug/app-debug.apk \
+            --test app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk \
+            --device model=Pixel2,version=29,locale=en,orientation=portrait \
+            --timeout 5m \
+            --directories-to-pull /sdcard/screenshots \
+            --environment-variables clearPackageData=true
 
       - name: SonarCloud Analysis
         env:
@@ -82,6 +70,6 @@ jobs:
         run: ./gradlew sonar
 
       - name: Upload APK to Firebase
-        run: ./gradlew appDistributionUploadDebug
         env:
-          GOOGLE_APPLICATION_CREDENTIALS: app/firebase-adminsdk.json
+          GOOGLE_APPLICATION_CREDENTIALS: $HOME/gcloud-service-key.json
+        run: ./gradlew appDistributionUploadDebug
